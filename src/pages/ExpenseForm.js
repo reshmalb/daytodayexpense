@@ -1,11 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect,useMemo } from 'react';
 import './ExpenseForm.css';
+import axios from 'axios';
+
+const fetchData=async()=>{
+    try{
+      const response= await axios.get('https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json')
+      const data = response.docs.map((doc) => doc.data());
+        return data;
+    }catch(error){
+        console.log(error)
+    }
+}
+
+
 
 function ExpenseForm() {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [expenses, setExpenses] = useState([]);
+  const [data,setData]=useState([])
+
+ 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          'https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json'
+        );
+        const data = response.data;
+        setData(data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (data) {
+      const newExpenses = Object.keys(data).map((key) => ({
+        id: key,
+        amount: data[key].amount,
+        description: data[key].title,
+        category: data[key].category,
+      }));
+
+      setExpenses(newExpenses);
+    }
+  }, [data]);
 
   const handleAmountChange = (event) => {
     setAmount(event.target.value);
@@ -19,10 +63,29 @@ function ExpenseForm() {
     setCategory(event.target.value);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async(event) => {
     event.preventDefault();
     const newExpense = { amount, description, category };
+
+  try{
+    const response=await axios.post('https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json',{
+     title:description,
+     category:category,
+     amount,amount
+    })
+    console.log(response)
+    if(response.status===200){
     setExpenses([...expenses, newExpense]);
+    }
+     
+  }catch(error){
+    console.log(error.message)
+  }
+
+
+
+
+
     setAmount('');
     setDescription('');
     setCategory('');
