@@ -20,20 +20,24 @@ function ExpenseForm() {
   const [category, setCategory] = useState('');
   const [expenses, setExpenses] = useState([]);
   const [data,setData]=useState([])
+  const [editId,setEditId]=useState(null)
+  
 
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(
+        'https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json'
+      );
+      const data = response.data;
+      setData(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
  
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          'https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json'
-        );
-        const data = response.data;
-        setData(data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
+   
 
     fetchData();
   }, []);
@@ -62,34 +66,88 @@ function ExpenseForm() {
   const handleCategoryChange = (event) => {
     setCategory(event.target.value);
   };
-
+//SUBMIT HANDLER
   const handleSubmit = async(event) => {
-    event.preventDefault();
-    const newExpense = { amount, description, category };
+    event.preventDefault();  
 
   try{
-    const response=await axios.post('https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json',{
-     title:description,
-     category:category,
-     amount,amount
-    })
-    console.log(response)
+    let response;
+   
+    if(editId!=null){
+        response=await axios.put(`https://fir-login-aea12-default-rtdb.firebaseio.com/expense/${editId}.json`,{
+            title:description,
+            category:category,
+            amount:amount
+           })
+           setEditId(null);
+     
+    }else{       
+        response=await axios.put(`https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json`,{
+            title:description,
+            category:category,
+            amount:amount
+           }) 
+
+    }
+
+    
+    console.log(response.data)
     if(response.status===200){
-    setExpenses([...expenses, newExpense]);
+        fetchData();
+    // const newExpense = { 
+    //     id:response.data.name,
+    //     amount:amount,
+    //     description:description,
+    //     category:category
+    //  };
+
+    // setExpenses([...expenses, newExpense]);
+
+
     }
      
   }catch(error){
     console.log(error.message)
   }
-
-
-
-
-
     setAmount('');
     setDescription('');
     setCategory('');
   };
+
+
+  //EDIT BUTTON HANDLER
+  const editButtonHandler= (expense)=>{
+    setEditId(expense.id)
+    console.log("editid",editId)
+    setAmount(expense.amount)
+    setDescription(expense.description)
+    setCategory(expense.category)
+
+
+  
+
+  }
+//EDIT HANDLER ENDS HERE
+//DELETE BUTTON HANDLER
+const deleteButtonHandler= async (id)=>{
+    try {
+        const response=await axios.delete(`https://fir-login-aea12-default-rtdb.firebaseio.com/expense/${id}.json`);
+        if(response.status===200){
+            alert ("expense deleted")
+            fetchData();
+        }
+       
+      } catch (error) {
+        console.log(error);
+      }
+    
+}
+
+//DELETE BUTTON HANDLER ENDS HERE
+
+
+
+
 
   return (
     <div className="expense-form-container">
@@ -122,15 +180,33 @@ function ExpenseForm() {
       </form>
       <div className="expense-list">
         <h2>Expenses</h2>
-        <ul>
-          {expenses.map((expense, index) => (
-            <li key={index}>
-              <div>{`Amount: ${expense.amount}`}</div>
-              <div>{`Description: ${expense.description}`}</div>
-              <div>{`Category: ${expense.category}`}</div>
-            </li>
-          ))}
-        </ul>
+        <table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Description</th>
+      <th>Amount</th>
+      <th>Edit</th>
+      <th>Delete</th>
+    </tr>
+  </thead>
+  <tbody>
+    {expenses.map((expense, index) => (
+      <tr key={expense.id}>
+        <td>{expense.category}</td>
+        <td>{expense.description}</td>
+        <td>{expense.amount}</td>
+        <td>
+          <button onClick={editButtonHandler.bind(null,expense)}>Edit</button>
+        </td>
+        <td>
+          <button onClick={deleteButtonHandler.bind(null,expense.id)}>Delete</button>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
       </div>
     </div>
   );
