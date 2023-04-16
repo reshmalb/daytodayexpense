@@ -1,6 +1,8 @@
 import React, { useState,useEffect,useMemo } from 'react';
 import './ExpenseForm.css';
 import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { expenseActions } from '../store/ExpenseStore';
 
 const fetchData=async()=>{
     try{
@@ -21,6 +23,8 @@ function ExpenseForm() {
   const [expenses, setExpenses] = useState([]);
   const [data,setData]=useState([])
   const [editId,setEditId]=useState(null)
+  //redux state update
+  const dispatch=useDispatch();
   
 
 
@@ -30,6 +34,7 @@ function ExpenseForm() {
         'https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json'
       );
       const data = response.data;
+      dispatch(expenseActions.addExpenses(data))
       setData(data);
     } catch (error) {
       console.log(error);
@@ -82,7 +87,7 @@ function ExpenseForm() {
            setEditId(null);
      
     }else{       
-        response=await axios.put(`https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json`,{
+        response=await axios.post(`https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json`,{
             title:description,
             category:category,
             amount:amount
