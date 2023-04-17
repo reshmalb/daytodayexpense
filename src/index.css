@@ -1,3 +1,7 @@
 *{
   box-sizing: border-box;
 }
+:root {
+  --bg-color-light: #f5f5f5;
+  --bg-color-dark: #333333;
+}

@@ -1,3 +1,10 @@
 *{
   box-sizing: border-box;
 }
+.App.light {
+  background-color: var(--bg-color-light);
+}
+
+.App.dark {
+  background-color: var(--bg-color-dark);
+}

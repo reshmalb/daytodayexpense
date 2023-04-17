@@ -1,18 +1,18 @@
 import React, { useState,useEffect,useMemo } from 'react';
 import './ExpenseForm.css';
 import axios from 'axios';
-import { useDispatch } from 'react-redux';
+import { useDispatch,useSelector } from 'react-redux';
 import { expenseActions } from '../store/ExpenseStore';
 
-const fetchData=async()=>{
-    try{
-      const response= await axios.get('https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json')
-      const data = response.docs.map((doc) => doc.data());
-        return data;
-    }catch(error){
-        console.log(error)
-    }
-}
+// const fetchData=async()=>{
+//     try{
+//       const response= await axios.get('https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json')
+//       //const data = response.docs.map((doc) => doc.data());
+//         return response;
+//     }catch(error){
+//         console.log(error)
+//     }
+// }
 
 
 
@@ -25,8 +25,9 @@ function ExpenseForm() {
   const [editId,setEditId]=useState(null)
   //redux state update
   const dispatch=useDispatch();
+  const addedExpenses=useSelector((state=> state.expense.expenseDetails))
   
-
+  
 
   const fetchData = async () => {
     try {
@@ -34,21 +35,21 @@ function ExpenseForm() {
         'https://fir-login-aea12-default-rtdb.firebaseio.com/expense.json'
       );
       const data = response.data;
-      dispatch(expenseActions.addExpenses(data))
+      dispatch(expenseActions.fetchExpenses(data))
       setData(data);
     } catch (error) {
       console.log(error);
     }
   };
  
-  useEffect(() => {
-   
-
-    fetchData();
+  useEffect(() => {  
+        fetchData();
+ 
   }, []);
 
   useEffect(() => {
     if (data) {
+
       const newExpenses = Object.keys(data).map((key) => ({
         id: key,
         amount: data[key].amount,
@@ -60,6 +61,9 @@ function ExpenseForm() {
     }
   }, [data]);
 
+
+  
+  
   const handleAmountChange = (event) => {
     setAmount(event.target.value);
   };
@@ -94,22 +98,20 @@ function ExpenseForm() {
            }) 
 
     }
-
-    
-    console.log(response.data)
-    if(response.status===200){
-        fetchData();
-    // const newExpense = { 
-    //     id:response.data.name,
-    //     amount:amount,
-    //     description:description,
-    //     category:category
-    //  };
-
-    // setExpenses([...expenses, newExpense]);
-
-
+    const key=response.data.name;
+    const newExpense={
+                      id:key,
+                      title:description,
+                      category:category,
+                      amount:amount,        
     }
+    console.log(response.data)
+    if(response.status===200){ 
+        // dispatch(expenseActions.addExpenses(newExpense))
+        // setExpenses(addedExpenses)
+        fetchData()
+
+       }
      
   }catch(error){
     console.log(error.message)
@@ -156,7 +158,7 @@ const deleteButtonHandler= async (id)=>{
 
   return (
     <div className="expense-form-container">
-      <form className="expense-form" onSubmit={handleSubmit}>
+      <form className="expense-form" onSubmit={handleSubmit}>   
         <label htmlFor="amount">Amount:</label>
         <input
           type="number"
@@ -165,6 +167,7 @@ const deleteButtonHandler= async (id)=>{
           step="0.01"
           value={amount}
           onChange={handleAmountChange}
+          required
         />
         <label htmlFor="description">Description:</label>
         <input
@@ -172,6 +175,7 @@ const deleteButtonHandler= async (id)=>{
           id="description"
           value={description}
           onChange={handleDescriptionChange}
+          required
         />
         <label htmlFor="category">Category:</label>
         <select id="category" value={category} onChange={handleCategoryChange}>
